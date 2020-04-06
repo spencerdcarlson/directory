@@ -60,7 +60,12 @@ defmodule Google.Oauth2.Certificates do
     end
   end
 
-  def decode(%{"algorithm" => algorithm, "certs" => certs, "expire" => expire, "version" => version}) do
+  def decode(%{
+        "algorithm" => algorithm,
+        "certs" => certs,
+        "expire" => expire,
+        "version" => version
+      }) do
     {:ok,
      %__MODULE__{
        certs: Enum.map(certs, &Certificate.decode!/1),
