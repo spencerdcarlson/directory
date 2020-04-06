@@ -20,7 +20,7 @@ defmodule Google.Oauth2.Client do
 
   def certificates(certs = %Certificates{version: version}) do
     if Certificates.expired?(certs) do
-      Logger.info("Certificates are expired. Make HTTP call")
+      Logger.debug("Certificates are expired. Make HTTP call")
 
       with {:ok, path} <- certificate_uri_path(version),
            {:ok, 200, headers, response} <-
@@ -41,7 +41,7 @@ defmodule Google.Oauth2.Client do
           certs
       end
     else
-      Logger.info("Certificates are not expired. Using cache")
+      Logger.debug("Certificates are not expired. Using cache")
       certs
     end
   end

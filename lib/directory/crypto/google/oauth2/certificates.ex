@@ -6,7 +6,12 @@ defmodule Google.Oauth2.Certificate do
   version 1 cert is %{"pem" => "-----BEGIN CERTIFICATE----- ..."}
   version 3 cert is %{"kid" => "53c66aab5...". "e" => "AQAB", ...}
   """
+  @derive Jason.Encoder
   defstruct kid: nil, cert: nil
+
+  def decode!(%{"kid" => kid, "cert" => cert}) do
+    %__MODULE__{kid: kid, cert: cert}
+  end
 end
 
 defmodule Google.Oauth2.Certificates do
@@ -16,6 +21,7 @@ defmodule Google.Oauth2.Certificates do
   """
 
   alias Google.Oauth2.Certificate
+  @derive Jason.Encoder
   defstruct certs: [], expire: nil, algorithm: "RS256", version: 1
 
   def expired?(%__MODULE__{expire: expire}), do: expire < DateTime.utc_now()
@@ -46,4 +52,23 @@ defmodule Google.Oauth2.Certificates do
   def find(%__MODULE__{certs: certs}, kid) do
     Enum.find(certs, fn %Certificate{kid: id} -> id == kid end)
   end
+
+  def decode(json) when is_bitstring(json) do
+    case Jason.decode(json) do
+      {:ok, map} -> decode(map)
+      _ -> {:error, :jason_decode_certificates}
+    end
+  end
+
+  def decode(%{"algorithm" => algorithm, "certs" => certs, "expire" => expire, "version" => version}) do
+    {:ok,
+     %__MODULE__{
+       certs: Enum.map(certs, &Certificate.decode!/1),
+       expire: expire,
+       algorithm: algorithm,
+       version: version
+     }}
+  end
+
+  def decode(_), do: {:error, :decode_certificates}
 end

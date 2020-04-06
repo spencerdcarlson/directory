@@ -28,3 +28,4 @@ directory-*.tar
 /priv/static/
 
 .env*
+priv/google.oauth2.certificates.json
