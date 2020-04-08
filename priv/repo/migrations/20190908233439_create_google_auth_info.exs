@@ -2,8 +2,7 @@ defmodule Directory.Repo.Migrations.CreateGoogleAuthInfo do
   use Ecto.Migration
 
   def change do
-    create table(:google_auth_info, primary_key: false) do
-      add :id, :binary_id, primary_key: true
+    create table(:google_auth_info) do
       add :refresh_token, :string
       add :scopes, :string
       add :token, :string
@@ -21,7 +20,9 @@ defmodule Directory.Repo.Migrations.CreateGoogleAuthInfo do
       add :phone, :string
       add :profile_url, :string
       add :website_url, :string
-      add :user_id, references(:users, type: :binary_id)
+      add :raw_user, :json
+      add :raw_info, :json
+      add :user_id, references(:users)
       timestamps()
     end
 

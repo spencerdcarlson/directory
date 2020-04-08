@@ -18,6 +18,15 @@ defmodule DirectoryWeb.AuthenticationController do
     |> json(%{csrf: csrf})
   end
 
+  def user_uid(conn, _params) do
+    %{uid: uid} =
+      conn
+      |> get_session(:user_id)
+      |> Users.get()
+
+    json(conn, %{user_uid: uid})
+  end
+
   def request(conn, _params) do
     render(conn, "request.html", callback_url: Helpers.callback_url(conn))
   end
@@ -36,16 +45,17 @@ defmodule DirectoryWeb.AuthenticationController do
   end
 
   def callback(conn = %{assigns: %{ueberauth_auth: auth}}, _params) do
-    #    case UserFromAuth.find_or_create(auth) do
     case Users.find_or_create(auth) do
       {:ok, %{user: user, jwt: jwt}} ->
         conn
         |> put_flash(:info, "Successfully authenticated.")
         |> put_session(:user_id, user.id)
-        |> put_resp_cookie("id_token", jwt)
+        |> put_resp_cookie("id_token", jwt, http_only: false)
         |> put_resp_cookie("csrf", CSRFProtection.get_csrf_token(), http_only: false)
         |> configure_session(renew: true)
-        |> redirect(to: "/")
+        |> redirect(external: "http://localhost:8080")
+
+      #        |> redirect(to: "/")
 
       {:error, reason} ->
         conn

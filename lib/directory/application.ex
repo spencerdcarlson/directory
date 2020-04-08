@@ -13,7 +13,7 @@ defmodule Directory.Application do
       Directory.Repo,
       # Start the endpoint when the application starts
       DirectoryWeb.Endpoint,
-      CertificateCache
+      GoogleCerts.CertificateCache
       # Starts a worker by calling: Directory.Worker.start_link(arg)
       # {Directory.Worker, arg},
     ]

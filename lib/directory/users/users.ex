@@ -8,134 +8,101 @@ defmodule Directory.Users do
 
   alias Directory.{Crypto.JWTManager, Repo}
   alias Directory.User
+  alias Directory.Utility.Map, as: MapUtility
+  alias Ecto.Changeset
 
   require Logger
 
-  def find_or_create(auth = %Auth{provider: :identity}) do
-    case validate_pass(auth.credentials) do
-      :ok ->
-        {:ok, basic_info(auth)}
+  def get(nil), do: %User{}
 
-      {:error, reason} ->
-        {:error, reason}
-    end
+  def get(id) do
+    User
+    |> User.with_id(id)
+    |> Repo.one()
   end
+
+  def find_or_create(%Auth{provider: :identity}), do: {:error, :basic_auth_not_supported}
 
   def find_or_create(auth = %Auth{}) do
     with {:get_jwt, {:ok, jwt}} <- {:get_jwt, jwt(auth)},
          {:validate_jwt, {:ok, _}} <- {:validate_jwt, JWTManager.verify_and_validate(jwt)},
-         {:upsert, {:ok, user}} <- {:upsert, upsert(find(auth), auth)} do
+         {:find_user, {:ok, user}} <- {:find_user, find(auth)},
+         {:upsert, {:ok, user}} <- {:upsert, upsert(user, auth)} do
       {:ok, %{user: user, jwt: jwt}}
     else
-      {:get_jwt, {:error, error}} ->
-        Logger.error(error)
-        {:error, "Could not get JWT from google redirect"}
-
-      {:validate_jwt, {:error, error}} ->
-        Logger.error(error)
-        {:validate_jwt, "Could not decode or verify JWT"}
-
-      {:upsert, {:error, error}} ->
-        Logger.error(error)
-        {:upsert, "Could not upsert user info"}
-
-      error ->
-        Logger.error(error)
-        {:error, "Unknown error"}
+      {error, {:error, _detail}} ->
+        Logger.error("User find or create error. Error: " <> inspect(error))
+        {:error, error}
     end
   end
 
   defp jwt(%Auth{
          provider: :google,
          extra: %Extra{raw_info: %{token: %AccessToken{other_params: %{"id_token" => jwt}}}}
-       }),
-       do: {:ok, jwt}
-
-  defp jwt(auth), do: {:error, auth}
-
-  def find(%Auth{provider: :google, uid: uid}) do
-    User
-    |> User.with_guid(uid)
-    |> Repo.one()
-    |> Repo.preload(:auth_info)
+       }) do
+    {:ok, jwt}
   end
 
-  # github does it this way
-  defp avatar_from_auth(%{info: %{urls: %{avatar_url: image}}}), do: image
+  defp jwt(_), do: {:error, :get_jwt_from_auth}
 
-  # facebook does it this way
-  defp avatar_from_auth(%{info: %{image: image}}), do: image
-
-  # default case if nothing matches
-  defp avatar_from_auth(auth) do
-    Logger.warn("#{auth.provider} needs to find an avatar URL!")
-    Logger.debug(Jason.encode!(auth))
-    nil
+  defp find(%Auth{provider: :google, uid: uid}) do
+    {:ok,
+     User
+     |> User.with_guid(uid)
+     |> Repo.one()
+     |> Repo.preload(:auth_info)}
   end
 
-  defp upsert(record, auth = %Auth{provider: :google}) do
-    changes = %{
-      uid: auth.uid,
-      refresh_token: auth.credentials.refresh_token,
-      scopes: hd(auth.credentials.scopes),
-      token: auth.credentials.token,
-      sub: auth.extra.raw_info.user["sub"],
-      expires_at: DateTime.from_unix!(auth.credentials.expires_at),
-      description: auth.info.description,
-      email: auth.info.email,
-      first_name: auth.info.first_name,
-      image: auth.info.image,
-      last_name: auth.info.last_name,
-      location: auth.info.location,
-      name: auth.info.name,
-      nickname: auth.info.nickname,
-      phone: auth.info.phone,
-      profile_url: auth.info.urls.profile,
-      website_url: auth.info.urls.website
-    }
+  defp find(_), do: {:error, :find_user_not_supported}
 
-    result =
-      record
-      |> User.changeset(%{auth_info: changes})
-      |> Repo.insert_or_update()
-
-    case result do
-      {:ok, schema} ->
-        {:ok, schema}
-
-      {:error, changeset} ->
-        Logger.error("error inserting user. #{inspect(changeset)}")
-        {:error, auth}
-    end
+  defp upsert(nil, auth = %Auth{provider: :google}) do
+    Logger.info("User does not exist, creating a new user.")
+    upsert(%User{uid: Ecto.UUID.generate()}, auth)
   end
 
-  defp basic_info(auth) do
-    %{id: auth.uid, name: name_from_auth(auth), avatar: avatar_from_auth(auth)}
-  end
-
-  defp name_from_auth(auth) do
-    if auth.info.name do
-      auth.info.name
+  defp upsert(user = %User{}, auth = %Auth{provider: :google}) do
+    with {:map_auth_info, {:ok, auth_info}} <- {:map_auth_info, map_auth_info(auth)},
+         {:changeset, changeset = %Changeset{valid?: true}} <-
+           {:changeset, User.changeset(user, auth_info)},
+         {:upsert, {:ok, user = %User{id: id}}} <- {:upsert, Repo.insert_or_update(changeset)} do
+      Logger.info("User #{id} was updated.")
+      {:ok, user}
     else
-      name =
-        [auth.info.first_name, auth.info.last_name]
-        |> Enum.filter(&(&1 != nil and &1 != ""))
-
-      if name == [], do: auth.info.nickname, else: Enum.join(name, " ")
+      {step, detail} ->
+        Logger.error("error updating user. Error: " <> inspect(detail))
+        {:error, step}
     end
   end
 
-  defp validate_pass(%{other: %{password: ""}}) do
-    {:error, "Password required"}
+  defp map_auth_info(auth = %Auth{provider: :google}) do
+    # Map Ueberauth.Auth to Directory.GoogleAuthInfo
+    auth = MapUtility.to_map(auth)
+
+    {:ok,
+     %{
+       auth_info: %{
+         uid: MapUtility.dig(auth, [:uid]),
+         refresh_token: MapUtility.dig(auth, [:credentials, :refresh_token]),
+         scopes: auth |> MapUtility.dig([:credentials, :scopes]) |> hd(),
+         token: MapUtility.dig(auth, [:credentials, :token]),
+         sub: MapUtility.dig(auth, [:extra, :raw_info, :user, "sub"]),
+         expires_at: auth |> MapUtility.dig([:credentials, :expires_at]) |> DateTime.from_unix!(),
+         description: MapUtility.dig(auth, [:info, :description]),
+         email: MapUtility.dig(auth, [:info, :email]),
+         first_name: MapUtility.dig(auth, [:info, :first_name]),
+         image: MapUtility.dig(auth, [:info, :image]),
+         last_name: MapUtility.dig(auth, [:info, :last_name]),
+         location: MapUtility.dig(auth, [:info, :location]),
+         name: MapUtility.dig(auth, [:info, :name]),
+         nickname: MapUtility.dig(auth, [:info, :nickname]),
+         phone: MapUtility.dig(auth, [:info, :phone]),
+         profile_url: MapUtility.dig(auth, [:info, :urls, :profile]),
+         website_url: MapUtility.dig(auth, [:info, :urls, :website]),
+         raw_user: MapUtility.dig(auth, [:extra, :raw_info, :user]),
+         raw_info: MapUtility.dig(auth, [:info])
+       }
+     }}
   end
 
-  defp validate_pass(%{other: %{password: pw, password_confirmation: pw}}) do
-    :ok
-  end
-
-  defp validate_pass(%{other: %{password: _}}) do
-    {:error, "Passwords do not match"}
-  end
-
-  defp validate_pass(_), do: {:error, "Password Required"}
+  defp map_auth_info(_), do: {:error, :uber_auth_type_not_supported}
 end

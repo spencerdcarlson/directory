@@ -8,12 +8,11 @@ defmodule Directory.Crypto.VerifyHook do
 
   use Joken.Hooks
   require Logger
-  alias Google.Oauth2.Client
 
   @impl true
   def before_verify(_options, {jwt, %Joken.Signer{} = _signer}) do
     with {:ok, %{"kid" => kid}} <- Joken.peek_header(jwt),
-         {:ok, algorithm, key} <- Client.find_certificate(kid) do
+         {:ok, algorithm, key} <- GoogleCerts.find_certificate(kid) do
       {:cont, {jwt, Joken.Signer.create(algorithm, key)}}
     else
       error ->

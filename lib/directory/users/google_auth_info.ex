@@ -25,14 +25,14 @@ defmodule Directory.GoogleAuthInfo do
     :token,
     :sub,
     :expires_at,
-    :scopes
+    :scopes,
+    :raw_user,
+    :raw_info
   ]
   @required [:uid]
 
   @derive {Jason.Encoder, only: @fields}
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
   schema "google_auth_info" do
     field :uid, :string
     field :refresh_token, :string
@@ -51,6 +51,8 @@ defmodule Directory.GoogleAuthInfo do
     field :phone, :string
     field :profile_url, :string
     field :website_url, :string
+    field :raw_user, :map
+    field :raw_info, :map
     belongs_to :user, User
 
     timestamps()

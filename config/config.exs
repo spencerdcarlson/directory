@@ -10,9 +10,7 @@ use Mix.Config
 config :directory,
   ecto_repos: [Directory.Repo],
   generators: [
-    binary_id: true,
-    migration: true,
-    sample_binary_id: "11111111-1111-1111-1111-111111111111"
+    migration: true
   ],
   google_client_id: System.get_env("GOOGLE_CLIENT_ID")
 
