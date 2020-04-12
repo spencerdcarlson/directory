@@ -10,7 +10,8 @@ use Mix.Config
 config :directory,
   ecto_repos: [Directory.Repo],
   generators: [migration: true],
-  google_client_id: System.get_env("GOOGLE_CLIENT_ID")
+  google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
+  redirect_url: System.get_env("REDIRECT_URL") || "http://localhost:8080"
 
 # Configures the endpoint
 config :directory, DirectoryWeb.Endpoint,

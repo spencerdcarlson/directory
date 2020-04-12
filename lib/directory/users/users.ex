@@ -13,13 +13,23 @@ defmodule Directory.Users do
 
   require Logger
 
-  def get(nil), do: %User{}
+  def get(id, opts \\ [])
+  def get(nil, _), do: %User{}
 
-  def get(id) do
+  def get(id, type: :google_sub) do
+    User
+    |> User.with_guid(id)
+    |> Repo.one()
+  end
+
+  def get(id, _) when is_number(id) do
     User
     |> User.with_id(id)
     |> Repo.one()
+    |> Repo.preload(:auth_info)
   end
+
+  def get(_, _), do: %User{}
 
   def find_or_create(%Auth{provider: :identity}), do: {:error, :basic_auth_not_supported}
 

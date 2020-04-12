@@ -15,7 +15,7 @@ defmodule DirectoryWeb.Endpoint do
     gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 
-  plug CORSPlug, origin: "http://localhost:8080"
+  plug CORSPlug, origin: Application.get_env(:directory, :redirect_url, "http://localhost:8080")
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
