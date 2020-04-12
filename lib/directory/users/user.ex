@@ -6,7 +6,7 @@ defmodule Directory.User do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias Directory.{GoogleAuthInfo, User}
+  alias Directory.{GoogleAuthInfo}
 
   @derive {Jason.Encoder, only: [:auth_info]}
   @fields [:uid]

@@ -12,7 +12,7 @@ defmodule Directory.Crypto.VerifyHook do
   @impl true
   def before_verify(_options, {jwt, %Joken.Signer{} = _signer}) do
     with {:ok, %{"kid" => kid}} <- Joken.peek_header(jwt),
-         {:ok, algorithm, key} <- GoogleCerts.find_certificate(kid) do
+         {:ok, algorithm, key} <- GoogleCerts.fetch(kid) do
       {:cont, {jwt, Joken.Signer.create(algorithm, key)}}
     else
       error ->

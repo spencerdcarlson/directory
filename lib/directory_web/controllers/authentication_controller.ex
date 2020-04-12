@@ -4,6 +4,7 @@ defmodule DirectoryWeb.AuthenticationController do
   """
 
   use DirectoryWeb, :controller
+  require Logger
   plug Ueberauth
 
   alias Directory.Users
@@ -33,34 +34,31 @@ defmodule DirectoryWeb.AuthenticationController do
 
   def delete(conn, _params) do
     conn
-    |> put_flash(:info, "You have been logged out!")
     |> configure_session(drop: true)
-    |> redirect(to: "/")
+    |> json(%{logout: true})
   end
 
   def callback(conn = %{assigns: %{ueberauth_failure: _fails}}, _params) do
-    conn
-    |> put_flash(:error, "Failed to authenticate.")
-    |> redirect(to: "/")
+    redirect(conn, to: "/")
   end
 
   def callback(conn = %{assigns: %{ueberauth_auth: auth}}, _params) do
     case Users.find_or_create(auth) do
       {:ok, %{user: user, jwt: jwt}} ->
         conn
-        |> put_flash(:info, "Successfully authenticated.")
         |> put_session(:user_id, user.id)
+        |> put_session(:user_uid, user.uid)
         |> put_resp_cookie("id_token", jwt, http_only: false)
-        |> put_resp_cookie("csrf", CSRFProtection.get_csrf_token(), http_only: false)
         |> configure_session(renew: true)
         |> redirect(external: "http://localhost:8080")
 
-      #        |> redirect(to: "/")
+      {:error, reason} when is_atom(reason) ->
+        Logger.error("Error during login. Error: " <> inspect(reason))
+        json(conn, %{login: false, errors: [reason]})
 
-      {:error, reason} ->
-        conn
-        |> put_flash(:error, reason)
-        |> redirect(to: "/")
+      error ->
+        Logger.error("Unknown error during login. " <> inspect(error))
+        json(conn, %{login: false, errors: [:unknown]})
     end
   end
 end

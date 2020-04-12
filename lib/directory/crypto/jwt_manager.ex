@@ -10,7 +10,7 @@ defmodule Directory.Crypto.JWTManager do
 
   add_hook(Directory.Crypto.VerifyHook)
 
-  @impl true
+  @impl Joken.Config
   def token_config do
     default_claims(skip: [:aud, :iss])
     |> add_claim("iss", nil, &(&1 == @iss))

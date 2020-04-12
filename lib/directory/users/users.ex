@@ -78,31 +78,45 @@ defmodule Directory.Users do
     # Map Ueberauth.Auth to Directory.GoogleAuthInfo
     auth = MapUtility.to_map(auth)
 
-    {:ok,
-     %{
-       auth_info: %{
-         uid: MapUtility.dig(auth, [:uid]),
-         refresh_token: MapUtility.dig(auth, [:credentials, :refresh_token]),
-         scopes: auth |> MapUtility.dig([:credentials, :scopes]) |> hd(),
-         token: MapUtility.dig(auth, [:credentials, :token]),
-         sub: MapUtility.dig(auth, [:extra, :raw_info, :user, "sub"]),
-         expires_at: auth |> MapUtility.dig([:credentials, :expires_at]) |> DateTime.from_unix!(),
-         description: MapUtility.dig(auth, [:info, :description]),
-         email: MapUtility.dig(auth, [:info, :email]),
-         first_name: MapUtility.dig(auth, [:info, :first_name]),
-         image: MapUtility.dig(auth, [:info, :image]),
-         last_name: MapUtility.dig(auth, [:info, :last_name]),
-         location: MapUtility.dig(auth, [:info, :location]),
-         name: MapUtility.dig(auth, [:info, :name]),
-         nickname: MapUtility.dig(auth, [:info, :nickname]),
-         phone: MapUtility.dig(auth, [:info, :phone]),
-         profile_url: MapUtility.dig(auth, [:info, :urls, :profile]),
-         website_url: MapUtility.dig(auth, [:info, :urls, :website]),
-         raw_user: MapUtility.dig(auth, [:extra, :raw_info, :user]),
-         raw_info: MapUtility.dig(auth, [:info])
-       }
-     }}
+    auth_info =
+      %{
+        uid: MapUtility.dig(auth, [:uid]),
+        refresh_token: MapUtility.dig(auth, [:credentials, :refresh_token]),
+        scopes: auth |> MapUtility.dig([:credentials, :scopes]) |> hd(),
+        token: MapUtility.dig(auth, [:credentials, :token]),
+        sub: MapUtility.dig(auth, [:extra, :raw_info, :user, "sub"]),
+        expires_at: auth |> MapUtility.dig([:credentials, :expires_at]) |> DateTime.from_unix!(),
+        description: MapUtility.dig(auth, [:info, :description]),
+        email: MapUtility.dig(auth, [:info, :email]),
+        first_name: MapUtility.dig(auth, [:info, :first_name]),
+        image: MapUtility.dig(auth, [:info, :image]),
+        last_name: MapUtility.dig(auth, [:info, :last_name]),
+        location: MapUtility.dig(auth, [:info, :location]),
+        name: MapUtility.dig(auth, [:info, :name]),
+        nickname: MapUtility.dig(auth, [:info, :nickname]),
+        phone: MapUtility.dig(auth, [:info, :phone]),
+        profile_url: MapUtility.dig(auth, [:info, :urls, :profile]),
+        website_url: MapUtility.dig(auth, [:info, :urls, :website]),
+        raw_user: MapUtility.dig(auth, [:extra, :raw_info, :user]),
+        raw_info: MapUtility.dig(auth, [:info])
+      }
+      |> Enum.reduce(%{}, &filter_nil_values/2)
+
+    # filter out nil values, to keep any data about a user that no longer exists
+    # and doesn't have a a new value for it.
+    # TODO this doesn't actually work, because I can't get Repo.insert/2 to handle on_conflict to only update a list of fields
+    # so it is always setting them as nil if they don't exist. Might need to first fetch the record
+    # from the DB and then merge it will possible changes
+    # or convert this into a multi step transaction. 1 update auth record, 2 update user.
+
+    Map.has_key?(auth_info, :description)
+
+    {:ok, %{auth_info: auth_info}}
   end
 
   defp map_auth_info(_), do: {:error, :uber_auth_type_not_supported}
+
+  defp filter_nil_values({key, value}, acc) do
+    if is_nil(value), do: acc, else: Map.put(acc, key, value)
+  end
 end

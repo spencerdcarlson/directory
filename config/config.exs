@@ -9,9 +9,7 @@ use Mix.Config
 
 config :directory,
   ecto_repos: [Directory.Repo],
-  generators: [
-    migration: true
-  ],
+  generators: [migration: true],
   google_client_id: System.get_env("GOOGLE_CLIENT_ID")
 
 # Configures the endpoint

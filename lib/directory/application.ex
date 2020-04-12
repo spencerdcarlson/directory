@@ -4,7 +4,7 @@ defmodule Directory.Application do
   @moduledoc false
 
   use Application
-  alias Google.Oauth2.CertificateCache
+  alias GoogleCerts.CertificateCache
 
   def start(_type, _args) do
     # List all child processes to be supervised
@@ -13,7 +13,7 @@ defmodule Directory.Application do
       Directory.Repo,
       # Start the endpoint when the application starts
       DirectoryWeb.Endpoint,
-      GoogleCerts.CertificateCache
+      CertificateCache
       # Starts a worker by calling: Directory.Worker.start_link(arg)
       # {Directory.Worker, arg},
     ]

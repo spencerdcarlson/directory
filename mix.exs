@@ -36,8 +36,8 @@ defmodule Directory.MixProject do
       {:phoenix, "~> 1.4.10"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.1"},
-      {:postgrex, ">= 0.0.0"},
+      {:ecto_sql, "~> 3.4"},
+      {:postgrex, "~> 0.15.3"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
@@ -47,7 +47,8 @@ defmodule Directory.MixProject do
       {:joken, "~> 2.1"},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:husky, "~> 1.0", only: :dev, runtime: false},
-      {:google_certs, path: "/Users/sc/code/google_certs"}
+      {:google_certs, "~> 0.1"},
+      {:cors_plug, "~> 2.0"}
     ]
   end
 

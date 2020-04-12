@@ -5,7 +5,6 @@ defmodule DirectoryWeb.Router do
     # requires the _directory_key cookie be set in request
     plug :accepts, ["html", "json"]
     plug :fetch_session
-    plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
@@ -14,17 +13,11 @@ defmodule DirectoryWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", DirectoryWeb do
-    pipe_through :session
-
-    get "/", PageController, :index
-    #    get "/*path", PageController, :index # react routing
-  end
-
   scope "/api/ds", DirectoryWeb do
     pipe_through [:session]
     get "/csrf", AuthenticationController, :csrf
     get "/user/uid", AuthenticationController, :user_uid
+    post "/logout", AuthenticationController, :delete
   end
 
   scope "/auth", DirectoryWeb do
