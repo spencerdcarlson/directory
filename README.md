@@ -18,15 +18,12 @@ If oauth flow is successful:
 * An `id_token` cookie with Google issued JWT as the value is set
 
 There are four endpoints to demonstrate authentication. 
-* GET [/api/ds/session/whoami](localhost:8080/api/ds/session/whoami) - looks up a user from the session (`_directory_key` cookie)
-* GET [/api/ds/jwt/whoami](localhost:8080/api/ds/jwt/whoami) - looks up a user form the Google issued jwt (`id_token` cookie)
-* GET [/api/ds/csrf](localhost:8080/api/ds/csrf) - returns a CSRF token that can be used on protected requests.
-* POST [/api/ds/logout](localhost:8080/api/ds/logout) - logout a user, requires a CSRF token to be sent in [header or params](https://hexdocs.pm/plug/Plug.CSRFProtection.html)
+* GET [/api/ds/session/whoami](http://localhost:4000/api/ds/session/whoami) - looks up a user from the session (`_directory_key` cookie)
+* GET [/api/ds/jwt/whoami](http://localhost:4000/api/ds/jwt/whoami) - looks up a user form the Google issued jwt (`id_token` cookie)
+* GET [/api/ds/csrf](http://localhost:4000/api/ds/csrf) - returns a CSRF token that can be used on protected requests.
+* POST [/api/ds/logout](http://localhost:4000/api/ds/logout) - logout a user, requires a CSRF token to be sent in [header or params](https://hexdocs.pm/plug/Plug.CSRFProtection.html)
 
- 
 Curious if exposing an API endpoint to retrieve a CSRF token is dangerous? - See my writeup [here](https://www.notion.so/lsltr/A-CORS-Endpoint-ee305f7cfb0645b09d7cda18aaf586b0)
-
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
 ## Database
 ```bash
