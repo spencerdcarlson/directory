@@ -25,6 +25,8 @@ There are four endpoints to demonstrate authentication.
 
 Curious if exposing an API endpoint to retrieve a CSRF token is dangerous? - See my writeup [here](https://www.notion.so/lsltr/A-CORS-Endpoint-ee305f7cfb0645b09d7cda18aaf586b0)
 
+See [directory-web](https://github.com/spencerdcarlson/directory-web) for a simple companion frontend application
+
 ## Database
 ```bash
 docker run --rm \
