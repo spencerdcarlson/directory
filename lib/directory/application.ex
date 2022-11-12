@@ -4,7 +4,6 @@ defmodule Directory.Application do
   @moduledoc false
 
   use Application
-  alias GoogleCerts.CertificateCache
 
   def start(_type, _args) do
     # List all child processes to be supervised
@@ -12,8 +11,7 @@ defmodule Directory.Application do
       # Start the Ecto repository
       Directory.Repo,
       # Start the endpoint when the application starts
-      DirectoryWeb.Endpoint,
-      CertificateCache
+      DirectoryWeb.Endpoint
       # Starts a worker by calling: Directory.Worker.start_link(arg)
       # {Directory.Worker, arg},
     ]

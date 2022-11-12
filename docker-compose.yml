@@ -1,0 +1,16 @@
+version: '3'
+services:
+  db:
+    image: postgres:${PG_VERSION:-alpine3.16}
+    container_name: directory-postgres
+    restart: always
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - 5432:5432
+    volumes:
+      - directory-postgres:/var/lib/postgresql/data
+volumes:
+  directory-postgres:
+    driver: local
+

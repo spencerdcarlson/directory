@@ -5,7 +5,7 @@
 # is restricted to this project.
 
 # General application configuration
-use Mix.Config
+import Config
 
 config :directory,
   ecto_repos: [Directory.Repo],
@@ -18,7 +18,7 @@ config :directory, DirectoryWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "V2ymhPZlxm00KyWzblu01NCbZ3ieSYFiOmNnJYF7gmMtls/DiXvEcFfRIiyzVpA9",
   render_errors: [view: DirectoryWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: Directory.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub_server: Directory.PubSub
 
 # Configures Elixir's Logger
 config :logger, :console,

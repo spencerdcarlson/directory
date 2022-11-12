@@ -7,7 +7,7 @@ defmodule Directory.MixProject do
       version: "0.1.0",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -33,22 +33,21 @@ defmodule Directory.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.4.10"},
-      {:phoenix_pubsub, "~> 1.1"},
+      {:phoenix, "~> 1.6"},
+      {:phoenix_pubsub, "~> 2.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.4"},
-      {:postgrex, "~> 0.15.3"},
+      {:postgrex, "~> 0.15"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:ueberauth, "~> 0.6"},
-      {:ueberauth_google, "~> 0.9.0"},
+      {:ueberauth_google, "~> 0.10"},
       {:guardian, "~> 2.0"},
       {:joken, "~> 2.1"},
-      {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
-      {:husky, "~> 1.0", only: :dev, runtime: false},
-      {:google_certs, "~> 0.1"},
-      {:cors_plug, "~> 2.0"}
+      {:credo, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:google_certs, "~> 1.0"},
+      {:cors_plug, "~> 3.0"}
     ]
   end
 
