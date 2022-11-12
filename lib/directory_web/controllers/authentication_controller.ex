@@ -53,6 +53,8 @@ defmodule DirectoryWeb.AuthenticationController do
   end
 
   def callback(conn = %{assigns: %{ueberauth_auth: auth}}, _params) do
+    Logger.debug("Auth: #{inspect(auth)}")
+
     case Users.find_or_create(auth) do
       {:ok, %{user: user, jwt: jwt}} ->
         conn
